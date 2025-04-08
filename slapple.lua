@@ -26,7 +26,7 @@ for i, v in ipairs(workspace.Arena.island5.Slapples:GetDescendants()) do
 	end  
 end  
 task.wait(0.6)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/asYouShould0410/silver-disco/refs/heads/main/slapple.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/lucasr125/sb/refs/heads/main/AutoFarm%20Slapple%20n%20Corns.lua"))()
 ]]
 	writefile("AutoTeleportFarm.lua", teleportScript)
 
@@ -40,27 +40,41 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/asYouShould0410/silve
 
 	if isfile(cacheFile) then
 		local cached = readfile(cacheFile)
-		serverList = HttpService:JSONDecode(cached)
+		local success, decoded = pcall(function()
+			return HttpService:JSONDecode(cached)
+		end)
+
+		if success and type(decoded) == "table" then
+			serverList = decoded
+		else
+			warn("Failed to decode cached server list.")
+		end
 	else
-		local success, response = pcall(function()
-			return game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+		local success, result = pcall(function()
+			return game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
 		end)
 
 		if success then
-			local data = HttpService:JSONDecode(response).data
-			for _, v in ipairs(data) do
-				if (v.playing and (type(v) == "table") and (v.maxPlayers > v.playing) and (v.id ~= game.JobId)) then
-					serverList[#serverList + 1] = v.id
-				end
-			end
+			local decodeSuccess, data = pcall(function()
+				return HttpService:JSONDecode(result)
+			end)
 
-			writefile(cacheFile, HttpService:JSONEncode(serverList))
+			if decodeSuccess and data and data.data then
+				for _, v in ipairs(data.data) do
+					if v.playing and (type(v) == "table") and (v.maxPlayers > v.playing) and (v.id ~= game.JobId) then
+						table.insert(serverList, v.id)
+					end
+				end
+				writefile(cacheFile, HttpService:JSONEncode(serverList))
+			else
+				warn("Failed to decode JSON from server list.")
+			end
 		else
-			warn("Failed to fetch server list: " .. tostring(response))
+			warn("HTTP request failed: " .. tostring(result))
 		end
 	end
 
-	if (#serverList > 0) then
+	if #serverList > 0 then
 		task.wait(7)
 		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, serverList[math.random(1, #serverList)])
 	end
