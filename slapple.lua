@@ -26,7 +26,7 @@ for i, v in ipairs(workspace.Arena.island5.Slapples:GetDescendants()) do
 	end  
 end  
 task.wait(0.6)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/lucasr125/sb/refs/heads/main/AutoFarm%20Slapple%20n%20Corns.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/asYouShould0410/silver-disco/refs/heads/main/slapple.lua"))()
 ]]
 	writefile("AutoTeleportFarm.lua", teleportScript)
 
