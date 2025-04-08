@@ -38,44 +38,50 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/asYouShould0410/silve
 	local serverList = {}
 	local cacheFile = "ServerCache_" .. game.PlaceId .. ".json"
 
-	if isfile(cacheFile) then
-		local cached = readfile(cacheFile)
-		local success, decoded = pcall(function()
-			return HttpService:JSONDecode(cached)
-		end)
-
-		if success and type(decoded) == "table" then
-			serverList = decoded
-		else
-			warn("Failed to decode cached server list.")
-		end
-	else
+	local function safeJSONDecode(data)
 		local success, result = pcall(function()
-			return game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+			return HttpService:JSONDecode(data)
+		end)
+		if success and type(result) == "table" then
+			return result
+		end
+		return nil
+	end
+
+	if isfile(cacheFile) then
+		local success, content = pcall(readfile, cacheFile)
+		if success then
+			local decoded = safeJSONDecode(content)
+			if decoded then
+				serverList = decoded
+			end
+		end
+	end
+
+	if #serverList == 0 then
+		local success, response = pcall(function()
+			return game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
 		end)
 
 		if success then
-			local decodeSuccess, data = pcall(function()
-				return HttpService:JSONDecode(result)
-			end)
-
-			if decodeSuccess and data and data.data then
-				for _, v in ipairs(data.data) do
-					if v.playing and (type(v) == "table") and (v.maxPlayers > v.playing) and (v.id ~= game.JobId) then
+			local decoded = safeJSONDecode(response)
+			if decoded and decoded.data then
+				for _, v in ipairs(decoded.data) do
+					if v and type(v) == "table" and v.playing and v.maxPlayers and v.id and v.maxPlayers > v.playing and v.id ~= game.JobId then
 						table.insert(serverList, v.id)
 					end
 				end
-				writefile(cacheFile, HttpService:JSONEncode(serverList))
-			else
-				warn("Failed to decode JSON from server list.")
+				pcall(function()
+					writefile(cacheFile, HttpService:JSONEncode(serverList))
+				end)
 			end
-		else
-			warn("HTTP request failed: " .. tostring(result))
 		end
 	end
 
 	if #serverList > 0 then
 		task.wait(7)
-		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, serverList[math.random(1, #serverList)])
+		pcall(function()
+			game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, serverList[math.random(1, #serverList)])
+		end)
 	end
 end
