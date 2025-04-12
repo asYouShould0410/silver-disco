@@ -1,6 +1,4 @@
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
+repeat task.wait(0.1) until game:IsLoaded() == true
 repeat task.wait() until game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
 for i, v in pairs(workspace.Arena.island5.Slapples:GetChildren()) do
@@ -49,7 +47,7 @@ while true do
     if success then
         break
     else
-        if string.find(errorMessage:lower(), "rate limit") then
+        if string.find(errorMessage:lower(), "too many requests") then
             warn("Rate limit hit. Retrying in 2 seconds...")
             task.wait(2)
         else
