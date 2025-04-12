@@ -16,6 +16,6 @@ end
 
 if game.PlaceId == 11520107397 then
     game:GetService("TeleportService"):Teleport(9015014224)
-elseif game.PlaceId == 9015014224 or game.Placeid == 6403373529 then
+elseif game.PlaceId == 9015014224 or game.PlaceId == 6403373529 then
     game:GetService("TeleportService"):Teleport(11520107397)
 end
